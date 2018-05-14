@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet">
+    <link href="https://unpkg.com/vuetify/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <link href="statics/css/base.css" rel="stylesheet">
+</head>
+
+<body>
+    <div id="app">
+        <v-app dark>
+            <v-navigation-drawer temporary v-model="drawer" clipped="true" absolute app>
+                <v-list>
+                    <v-list-tile v-for="item in navs" :key="item.title" @click="">
+                        <a style="color:white;" v-bind:href="item.url">
+                            <v-list-tile-content>
+                                <v-list-tile-title>{{ item.title }}</v-list-tile-title>
+                            </v-list-tile-content>
+                        </a>
+                    </v-list-tile>
+                </v-list>
+            </v-navigation-drawer>
+            <v-toolbar app>
+                <v-toolbar-side-icon color="cyan lighten-1" @click.stop="drawer = !drawer"></v-toolbar-side-icon>
+                <a href="/" style="color: #26C6DA;">
+                    <v-toolbar-title>Tronscope</v-toolbar-title>
+                </a>
+                <v-spacer></v-spacer>
+                <v-layout row>
+                    <v-flex>
+                        <form method="GET" action="/search">
+                            <v-text-field name="search" label="Hash/Address/Block Num..." color="cyan lighten-1"></v-text-field>
+                        </form>
+                    </v-flex>
+                </v-layout>
+
+            </v-toolbar>
+            <v-content>
+                <v-container fluid>
+                    <v-container grid-list-md text-xs-center>
+                        <v-layout row wrap>
+                            <v-flex xs6>
+                                <v-layout column>
+                                    <v-flex d-flex>
+                                        <v-card>
+                                            <v-card-text class="px-0">Last Block Height : {{!# .height #!}}</v-card-text>
+                                            <v-card-text class="px-0">Accounts : {{!# .accounts #!}}</v-card-text>
+                                            <v-card-text class="px-0">Nodes : {{!# .nodes #!}}</v-card-text>
+                                        </v-card>
+                                    </v-flex>
+                                    <v-flex d-flex>
+                                        <v-card>
+                                            <div id="top-accounts" style="width:100%;"></div>
+                                        </v-card>
+                                    </v-flex>
+                                </v-layout>
+                            </v-flex>
+                            <v-flex xs6>
+
+                                <template>
+                                    <v-data-table :headers="headers" :items="items" :loading="true" class="elevation-1" hide-actions>
+                                        <v-progress-linear slot="progress" color="cyan lighten-1" height=3 indeterminate></v-progress-linear>
+                                        <template slot="items" slot-scope="props">
+                                            <td class="text-sm-left">
+                                                <a style="color:white;text-decoration: none;" v-bind:href="props.item.num | getBlockHref">
+                                                    <span color="cyan lighten-1">{{ props.item.num }}</span>
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <a style="color: white;text-decoration: none;" v-bind:href="props.item.wit | getAddress">
+                                                    {{ props.item.wit }}
+                                                </a>
+                                            </td>
+                                        </template>
+                                    </v-data-table>
+                                </template>
+                            </v-flex>
+                        </v-layout>
+                    </v-container>
+                    <router-view>
+                    </router-view>
+                </v-container>
+            </v-content>
+            <v-footer app>
+                <v-spacer></v-spacer>&copy; {{ new Date().getFullYear() }}
+                <v-spacer></v-spacer>
+            </v-footer>
+        </v-app>
+    </div>
+
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/vuetify/dist/vuetify.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+
+    <script>
+        let v = new Vue({
+            el: '#app',
+            data: {
+                drawer: false,
+                headers: [{
+                        text: 'Block Num',
+                        align: 'left',
+                        sortable: false,
+                        value: 'num'
+                    },
+                    {
+                        text: 'Witness',
+                        sortable: false,
+                        align: "center",
+                        value: 'wit'
+                    }
+                ],
+                navs: [{
+                        title: 'Blocks',
+                        url: '/blocks'
+                    },
+                    {
+                        title: 'Accounts',
+                        url: '/accounts'
+                    },
+                    {
+                        title: 'Nodes',
+                        url: '/nodes'
+                    }
+                ],
+
+                items: [],
+            },
+            filters: {
+                getBlockHref: function (val) {
+                    return "/block?num=" + val;
+                },
+                getAddress: function (addr) {
+                    return "/account?address=" + addr;
+                }
+            }
+        });
+
+        axios.get('/blocklist?size=10').then(function (response) {
+            v.items = response.data.blocklist;
+        }).catch(function (err) {
+            console.log(err);
+        });
+
+
+        let top10 = JSON.parse({{!# .top10 #!}});
+        let pieData = [];
+        for (let i in top10) {
+            if (top10.hasOwnProperty(i)) {
+                pieData.push({
+                    name: i,
+                    y: top10[i]
+                });
+            }
+        }
+
+        var myChart = Highcharts.chart('top-accounts', {
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie'
+            },
+            title: {
+                text: 'Top 10 Accounts'
+            },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.y}</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: false
+                    },
+                    showInLegend: true
+                }
+            },
+            series: [{
+                name: 'Balance',
+                colorByPoint: true,
+                data: pieData,
+            }]
+        });
+
+       
+    </script>
+</body>
+
+</html>
