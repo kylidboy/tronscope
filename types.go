@@ -29,6 +29,7 @@ type (
 
 	Tx struct {
 		ID             int64 `gorm:"primary_key"`
+		Blocknumber    int64
 		Refblocknumber int64
 		Owneraddr      string `gorm:"type:varchar(64);index:txfrom"`
 		Toaddr         string `gorm:"type:varchar(64);index:txto"`

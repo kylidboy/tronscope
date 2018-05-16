@@ -51,7 +51,10 @@
                                                     {{ props.item.num }}
                                                 </a>
                                             </td>
-                                            <td><a style="color:white;text-decoration: none;" v-bind:href="props.item.wit | getAddress">{{ props.item.wit }}</a></td>
+                                            <td>{{ props.item.tx_num }}</td>
+                                            <td>
+                                                <a style="color:white;text-decoration: none;" v-bind:href="props.item.wit | getAddress">{{ props.item.wit }}</a>
+                                            </td>
                                         </template>
                                     </v-data-table>
                                 </template>
@@ -66,8 +69,8 @@
                 </v-container>
             </v-content>
             <v-footer app>
-                    <v-spacer></v-spacer>&copy; {{ new Date().getFullYear() }}
-                    <v-spacer></v-spacer>
+                <v-spacer></v-spacer>&copy; {{ new Date().getFullYear() }}
+                <v-spacer></v-spacer>
             </v-footer>
         </v-app>
     </div>
@@ -86,6 +89,12 @@
                         align: 'center',
                         sortable: false,
                         value: 'num'
+                    },
+                    {
+                        text: 'Num of txs',
+                        align: 'center',
+                        sortable: false,
+                        value: 'tx_num'
                     },
                     {
                         text: 'Witness',
@@ -115,7 +124,7 @@
                 clickPager(val) {
                     let vue = this;
                     val = val == 0 ? 1 : val;
-                    axios.get('/blocklist?size=25&page='+val).then(function(resp) {
+                    axios.get('/blocklist?size=25&page=' + val).then(function (resp) {
                         vue.items = resp.data.blocklist;
                         vue.page = val;
                     });

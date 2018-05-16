@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -36,11 +35,6 @@ func main() {
 	server.Delims("{{!#", "#!}}")
 	server.LoadHTMLGlob("templates/*")
 
-	txs := []Tx{}
-	blockdb.Table(Tx{}.TableName()).Order("id asc").Limit(10).Find(&txs)
-
-	fmt.Println(txs)
-
 	server.GET("/", func(ctx *gin.Context) {
 		top10 := []Account{}
 		accountdb.Select("address, balance").Order("balance desc").Limit(10).Find(&top10)
@@ -54,8 +48,14 @@ func main() {
 
 		}
 
+		ctx.HTML(http.StatusOK, "index.html", gin.H{
+			"top10": string(top10bytes),
+		})
+	})
+
+	server.GET("/getindexdata", func(ctx *gin.Context) {
 		accountNum := 0
-		accountdb.Table(top10[0].TableName()).Count(&accountNum)
+		accountdb.Table(Account{}.TableName()).Count(&accountNum)
 
 		nodeNum := 0
 		witnessdb.Table(Nodes{}.TableName()).Count(&nodeNum)
@@ -63,11 +63,10 @@ func main() {
 		b := &Block{}
 		blockdb.Select("number").Order("number desc").First(b)
 
-		ctx.HTML(http.StatusOK, "index.html", gin.H{
-			"top10":    string(top10bytes),
-			"accounts": accountNum,
-			"nodes":    nodeNum,
-			"height":   b.Number,
+		ctx.JSON(200, gin.H{
+			"accounts":   accountNum,
+			"nodes":      nodeNum,
+			"lastheight": b.Number,
 		})
 	})
 
@@ -86,8 +85,10 @@ func main() {
 
 		var blocklist = make([]gin.H, 0)
 		for _, blk := range blocks {
+			cnt := 0
+			blockdb.Table(Tx{}.TableName()).Where("blocknumber = ?", blk.Number).Count(&cnt)
 			blocklist = append(blocklist,
-				gin.H{"num": blk.Number, "wit": blk.Witnessaddr})
+				gin.H{"num": blk.Number, "wit": blk.Witnessaddr, "tx_num": cnt})
 		}
 
 		ctx.JSON(200, gin.H{
@@ -110,7 +111,7 @@ func main() {
 		blk := Block{}
 		txs := make([]Tx, 0)
 		blockdb.Find(&blk, number)
-		blockdb.Table(Tx{}.TableName()).Where("refblocknumber = ?", number).Find(&txs)
+		blockdb.Table(Tx{}.TableName()).Where("blocknumber = ?", number).Find(&txs)
 
 		t := time.Unix(blk.Timestamp/1000, 0)
 		ctx.HTML(200, "block.html", gin.H{

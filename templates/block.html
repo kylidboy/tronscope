@@ -106,16 +106,14 @@
                                 <v-expansion-panel-content v-for="(item,i) in txs" :key="i">
                                     <div slot="header">
                                         <v-layout row>
-                                            <v-flex xs4>{{ item.from }}</v-flex>
+                                            <v-flex xs4>{{ item.Owneraddr }}</v-flex>
                                             <v-flex xs2><v-icon>arrow_right</v-icon></v-flex>
-                                            <v-flex xs4>{{ item.to }}</v-flex>
+                                            <v-flex xs4>{{ item.Toaddr }}</v-flex>
                                             <v-flex>{{ item.value }}</v-flex>
                                         </v-layout>
                                     </div>
                                     <v-card>
-                                        <v-card-text class="cyan lighten-1">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
-                                            ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
-                                            ullamco laboris nisi ut aliquip ex ea commodo consequat.</v-card-text>
+                                        <v-card-text class="cyan lighten-1">{{ item.Contracts }}</v-card-text>
                                     </v-card>
                                 </v-expansion-panel-content>
                             </v-expansion-panel>
@@ -165,13 +163,7 @@
                     }
                 ],
 
-                txs: [
-                    {
-                        from: "xxxxx",
-                        to: "xxxxxxx",
-                        value: 123123
-                    }
-                ]
+                txs: {{!# .txs #!}}
             },
             methods: {
                 

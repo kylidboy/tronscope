@@ -45,9 +45,9 @@
                                 <v-layout column>
                                     <v-flex d-flex>
                                         <v-card>
-                                            <v-card-text class="px-0">Last Block Height : {{!# .height #!}}</v-card-text>
-                                            <v-card-text class="px-0">Accounts : {{!# .accounts #!}}</v-card-text>
-                                            <v-card-text class="px-0">Nodes : {{!# .nodes #!}}</v-card-text>
+                                            <v-card-text class="px-0">Last Block Height : {{ lastheight }}</v-card-text>
+                                            <v-card-text class="px-0">Accounts : {{ accounts }}</v-card-text>
+                                            <v-card-text class="px-0">Nodes : {{ nodes }}</v-card-text>
                                         </v-card>
                                     </v-flex>
                                     <v-flex d-flex>
@@ -67,6 +67,9 @@
                                                 <a style="color:white;text-decoration: none;" v-bind:href="props.item.num | getBlockHref">
                                                     <span color="cyan lighten-1">{{ props.item.num }}</span>
                                                 </a>
+                                            </td>
+                                            <td>
+                                                {{ props.item.tx_num }}
                                             </td>
                                             <td>
                                                 <a style="color: white;text-decoration: none;" v-bind:href="props.item.wit | getAddress">
@@ -107,6 +110,12 @@
                         value: 'num'
                     },
                     {
+                        text: 'Num of txs',
+                        align: 'center',
+                        sortable: false,
+                        value: 'tx_num',
+                    },
+                    {
                         text: 'Witness',
                         sortable: false,
                         align: "center",
@@ -128,6 +137,9 @@
                 ],
 
                 items: [],
+                lastheight: 0,
+                accounts: 0,
+                nodes: 0,
             },
             filters: {
                 getBlockHref: function (val) {
@@ -139,11 +151,26 @@
             }
         });
 
-        axios.get('/blocklist?size=10').then(function (response) {
-            v.items = response.data.blocklist;
-        }).catch(function (err) {
-            console.log(err);
-        });
+        let fetchData = function () {
+            axios.get('/getindexdata').then(
+                function (response) {
+                    v.lastheight = response.data.lastheight;
+                    v.accounts = response.data.accounts;
+                    v.nodes = response.data.nodes;
+                });
+
+            axios.get('/blocklist?size=10').then(function (response) {
+                v.items = response.data.blocklist;
+            }).catch(function (err) {
+                console.log(err);
+            });
+        };
+
+        fetchData();
+
+        setInterval(function () {
+            fetchData();
+        }, 3000);
 
 
         let top10 = JSON.parse({{!# .top10 #!}});
@@ -186,8 +213,6 @@
                 data: pieData,
             }]
         });
-
-       
     </script>
 </body>
 
